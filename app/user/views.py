@@ -84,12 +84,7 @@ class VerifyEmailView(generics.GenericAPIView):
 
 class ResetPasswordView(generics.GenericAPIView):
     """Change the password for the authenticated user"""
-    # TODO user reset via email!!!
-    #serializer_class = UserSerializer
-    #authentication_classes = [authentication.TokenAuthentication, ]
-    #permission_classes = [permissions.IsAuthenticated, ]
     serializer_class = ResetPasswordSerializer
-    print("reset password view")
 
     def post(self, request):
         data={'request': request, 'data': request.data}
@@ -97,14 +92,10 @@ class ResetPasswordView(generics.GenericAPIView):
 
         email = request.data['email']
 
-        print("CURRENT email " +email)
-
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
-            #uidb64=urlsafe_base64_encode(smart_bytes(user.id))
             uidb64=urlsafe_base64_encode(smart_bytes(user.id)).decode()
             token= PasswordResetTokenGenerator().make_token(user)
-            print("CURRENT ID " +str(user.id))
             current_site=get_current_site(
                 request=request).domain
             relativeLink = reverse(
@@ -125,10 +116,6 @@ class PasswordTokenCheckAPI(generics.GenericAPIView):
         try:
             id=smart_str(urlsafe_base64_decode(uidb64).decode())
             user=User.objects.get(id=id)
-
-            logger.debug("PasswordTokenCheckAPI")
-            logger.debug("ID:" + str(id))
-            logger.debug("UIDB64:" + str(uidb64))
 
             if not PasswordResetTokenGenerator().check_token(user, token):
                 return Response({'error':'Token is not valid, please request a new one'},
